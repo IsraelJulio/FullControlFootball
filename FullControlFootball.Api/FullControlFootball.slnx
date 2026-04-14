@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../FullControlFootball.Application/FullControlFootball.Application.csproj" />
+  <Project Path="FullControlFootball.Api.csproj" />
+</Solution>
