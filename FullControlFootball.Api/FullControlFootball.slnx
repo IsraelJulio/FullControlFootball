@@ -1,4 +1,7 @@
 <Solution>
   <Project Path="../FullControlFootball.Application/FullControlFootball.Application.csproj" />
+  <Project Path="../FullControlFootball.Contracts/FullControlFootball.Contracts.csproj" Id="2b98fddd-d95b-47e0-b6a8-1011a2b4c70e" />
+  <Project Path="../FullControlFootball.Domain/FullControlFootball.Domain.csproj" Id="fe61e563-6143-4e97-9a83-8227df6684a5" />
+  <Project Path="../FullControlFootball.Infrastructure/FullControlFootball.Infrastructure.csproj" Id="ee2dc136-3f3e-4210-b372-d53783a8d5df" />
   <Project Path="FullControlFootball.Api.csproj" />
 </Solution>
