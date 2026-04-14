@@ -1,8 +1,8 @@
 using FullControlFootball.Api.Extensions;
 using FullControlFootball.Api.Middleware;
 using FullControlFootball.Application.Common.Security;
-using FullControlFootball.Infrastructure.DependencyInjection;
 using FullControlFootball.Infrastructure.Authentication.Jwt;
+using FullControlFootball.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
@@ -16,8 +16,12 @@ builder.Host.UseSerilog((context, configuration) =>
         .Enrich.FromLogContext();
 });
 
-builder.Services.AddControllers();
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JWT settings are missing.");
 
+jwtSettings.Validate();
+
+builder.Services.AddControllers();
 builder.Services.AddApiServices();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();

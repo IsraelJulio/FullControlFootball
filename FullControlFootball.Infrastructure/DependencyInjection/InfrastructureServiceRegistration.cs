@@ -39,13 +39,17 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ICompetitionStandingService, CompetitionStandingService>();
         services.AddScoped<ITransferService, TransferService>();
         services.AddScoped<IRankingQueryService, RankingQueryService>();
+        services.AddScoped<IRankingCommandService, RankingCommandService>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
 
         var jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
             ?? throw new InvalidOperationException("JWT settings are missing.");
+
+        jwtSettings.Validate();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

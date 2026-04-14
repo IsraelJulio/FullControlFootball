@@ -3,6 +3,7 @@ using FullControlFootball.Application.Abstractions.Persistence;
 using FullControlFootball.Application.Abstractions.Time;
 using FullControlFootball.Application.Features.Auth.Contracts;
 using FullControlFootball.Domain.Entities;
+using FullControlFootball.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using FullControlFootball.Infrastructure.Authentication.Google;
@@ -16,23 +17,23 @@ public sealed class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly IGoogleTokenValidator _googleTokenValidator;
     private readonly JwtSettings _jwtSettings;
-    private readonly GoogleAuthSettings _googleSettings;
 
     public AuthService(
         IAppDbContext dbContext,
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
         IDateTimeProvider dateTimeProvider,
-        IOptions<JwtSettings> jwtOptions,
-        IOptions<GoogleAuthSettings> googleOptions)
+        IGoogleTokenValidator googleTokenValidator,
+        IOptions<JwtSettings> jwtOptions)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _dateTimeProvider = dateTimeProvider;
+        _googleTokenValidator = googleTokenValidator;
         _jwtSettings = jwtOptions.Value;
-        _googleSettings = googleOptions.Value;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken)
@@ -104,17 +105,52 @@ public sealed class AuthService : IAuthService
         return new AuthResponse(existingToken.User.Id, existingToken.User.Name, existingToken.User.Email, accessToken, replacement.Token, expiresAtUtc);
     }
 
-    public Task<AuthResponse> LoginWithGoogleAsync(GoogleLoginRequest request, string? ipAddress, CancellationToken cancellationToken)
+    public async Task<AuthResponse> LoginWithGoogleAsync(GoogleLoginRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
-        // TEMPORARY IMPLEMENTATION
-        // The architecture is ready for Google login. The next step is to validate the Google ID token
-        // against the configured client id and trusted issuer before resolving or provisioning the user.
-        _ = request;
-        _ = ipAddress;
-        _ = cancellationToken;
-        _ = _googleSettings.ClientId;
+        var payload = await _googleTokenValidator.ValidateAsync(request.IdToken, cancellationToken);
 
-        throw new NotImplementedException("Google login token validation is not implemented yet.");
+        var user = await _dbContext.Users
+            .Include(x => x.AuthProviders)
+            .SingleOrDefaultAsync(x => x.Email == payload.Email, cancellationToken);
+
+        if (user is null)
+        {
+            user = new User(payload.Name, payload.Email, null, payload.PictureUrl, null);
+            _dbContext.Users.Add(user);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var hasGoogleProvider = user.AuthProviders.Any(x =>
+            x.Provider == AuthProviderType.Google &&
+            x.ProviderUserId == payload.ProviderUserId);
+
+        if (!hasGoogleProvider)
+        {
+            var provider = new UserAuthProvider(
+                user.Id,
+                AuthProviderType.Google,
+                payload.ProviderUserId,
+                payload.Email);
+
+            _dbContext.UserAuthProviders.Add(provider);
+        }
+
+        user.MarkLogin(_dateTimeProvider.UtcNow);
+
+        var refreshToken = CreateRefreshToken(user.Id, ipAddress);
+        _dbContext.RefreshTokens.Add(refreshToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var (accessToken, expiresAtUtc) = _jwtTokenGenerator.GenerateAccessToken(user);
+
+        return new AuthResponse(
+            user.Id,
+            user.Name,
+            user.Email,
+            accessToken,
+            refreshToken.Token,
+            expiresAtUtc);
     }
 
     private RefreshToken CreateRefreshToken(Guid userId, string? ipAddress)

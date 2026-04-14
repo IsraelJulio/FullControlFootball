@@ -1,3 +1,4 @@
+using FullControlFootball.Domain.Common;
 using FullControlFootball.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,12 +12,16 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
         builder.ToTable("refresh_tokens");
         builder.HasKey(x => x.Id);
 
-builder.Property(x => x.Token).HasMaxLength(200).IsRequired();
-builder.Property(x => x.CreatedByIp).HasMaxLength(100);
-builder.Property(x => x.RevokedByIp).HasMaxLength(100);
-builder.Property(x => x.ReplacedByToken).HasMaxLength(200);
-builder.HasIndex(x => x.Token).IsUnique();
-builder.HasOne(x => x.User).WithMany(x => x.RefreshTokens).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.Token).HasMaxLength(FieldLengths.Token).IsRequired();
+        builder.Property(x => x.CreatedByIp).HasMaxLength(FieldLengths.IpAddress);
+        builder.Property(x => x.RevokedByIp).HasMaxLength(FieldLengths.IpAddress);
+        builder.Property(x => x.ReplacedByToken).HasMaxLength(FieldLengths.Token);
 
+        builder.HasIndex(x => x.Token).IsUnique();
+
+        builder.HasOne(x => x.User)
+            .WithMany(x => x.RefreshTokens)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using FullControlFootball.Application.Features.CompetitionStandings.Contracts;
+using FullControlFootball.Domain.Common;
 
 namespace FullControlFootball.Application.Validators;
 
@@ -15,7 +16,7 @@ public sealed class CreateCompetitionStandingRequestValidator : AbstractValidato
 
         RuleForEach(x => x.Rows).ChildRules(row =>
         {
-            row.RuleFor(r => r.ClubNameSnapshot).NotEmpty().MaximumLength(180);
+            row.RuleFor(r => r.ClubNameSnapshot).NotEmpty().MaximumLength(FieldLengths.SnapshotName);
             row.RuleFor(r => r.Position).GreaterThan(0);
             row.RuleFor(r => r.Played).GreaterThanOrEqualTo(0);
             row.RuleFor(r => r.Wins).GreaterThanOrEqualTo(0);

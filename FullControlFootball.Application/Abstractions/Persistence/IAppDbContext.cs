@@ -1,5 +1,7 @@
 using FullControlFootball.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FullControlFootball.Application.Abstractions.Persistence;
 
@@ -24,6 +26,8 @@ public interface IAppDbContext
     DbSet<CompetitionTopAssist> CompetitionTopAssists { get; }
     DbSet<TransferWindow> TransferWindows { get; }
     DbSet<TransferTransaction> TransferTransactions { get; }
+
+    DatabaseFacade Database { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

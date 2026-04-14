@@ -1,3 +1,4 @@
+using FullControlFootball.Domain.Common;
 using FullControlFootball.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,12 +12,16 @@ public sealed class CompetitionConfiguration : IEntityTypeConfiguration<Competit
         builder.ToTable("competitions");
         builder.HasKey(x => x.Id);
 
-builder.Property(x => x.Name).HasMaxLength(180).IsRequired();
-builder.Property(x => x.ExternalSource).HasMaxLength(100);
-builder.Property(x => x.ExternalId).HasMaxLength(150);
-builder.HasIndex(x => x.CountryId);
-builder.HasIndex(x => new { x.ExternalSource, x.ExternalId });
-builder.HasOne(x => x.Country).WithMany().HasForeignKey(x => x.CountryId).OnDelete(DeleteBehavior.SetNull);
+        builder.Property(x => x.Name).HasMaxLength(FieldLengths.SnapshotName).IsRequired();
+        builder.Property(x => x.ExternalSource).HasMaxLength(FieldLengths.ExternalSource);
+        builder.Property(x => x.ExternalId).HasMaxLength(FieldLengths.ExternalId);
 
+        builder.HasIndex(x => x.CountryId);
+        builder.HasIndex(x => new { x.ExternalSource, x.ExternalId });
+
+        builder.HasOne(x => x.Country)
+            .WithMany()
+            .HasForeignKey(x => x.CountryId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

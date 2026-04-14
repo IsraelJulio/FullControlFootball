@@ -1,5 +1,6 @@
 using FluentValidation;
 using FullControlFootball.Application.Features.Auth.Contracts;
+using FullControlFootball.Domain.Common;
 
 namespace FullControlFootball.Application.Features.Auth.Validators;
 
@@ -7,8 +8,8 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
 {
     public RegisterRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(320);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(FieldLengths.Name);
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(FieldLengths.Email);
         RuleFor(x => x.Password)
             .NotEmpty()
             .MinimumLength(8)

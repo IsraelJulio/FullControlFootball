@@ -11,9 +11,12 @@ public sealed class CompetitionStandingConfiguration : IEntityTypeConfiguration<
         builder.ToTable("competition_standings");
         builder.HasKey(x => x.Id);
 
-builder.HasIndex(x => x.SeasonCompetitionId);
-builder.HasIndex(x => new { x.SeasonCompetitionId, x.SnapshotDateUtc });
-builder.HasOne(x => x.SeasonCompetition).WithMany(x => x.Standings).HasForeignKey(x => x.SeasonCompetitionId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.SeasonCompetitionId);
+        builder.HasIndex(x => new { x.SeasonCompetitionId, x.SnapshotDateUtc });
 
+        builder.HasOne(x => x.SeasonCompetition)
+            .WithMany(x => x.Standings)
+            .HasForeignKey(x => x.SeasonCompetitionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
